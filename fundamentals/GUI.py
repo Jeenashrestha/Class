@@ -9,8 +9,8 @@ frame.mainloop()"""
 
 frame= Tk()
 frame.geometry("400x600")
-icon= PhotoImage(file="D:\pythonClass\corePython\images\icon.png")
-frame.iconphoto(False, icon)
+#icon= PhotoImage(file="D:\pythonClass\corePython\images\icon.png")
+#frame.iconphoto(False, icon)
 frame.resizable(False, False)
 frame.title("Calculator")
 lb1=Label(frame,text="Enter comment").place(x=20,y=20)
