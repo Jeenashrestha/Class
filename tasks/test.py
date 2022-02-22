@@ -1,20 +1,24 @@
-from tkinter import *
+import mysql.connector
+import tkinter  as tk 
+from tkinter import * 
+my_w = tk.Tk()
+my_w.geometry("400x250") 
+conn = mysql.connector.connect(
+  host="localhost",
+  user="root",
+  passwd="",
+  database="broadway"
+)
 
-def sel():
-   selection = "You selected the option " + str(var.get())
-   label.config(text = selection)
-
-root = Tk()
-var = IntVar()
-root.geometry("400x600")
-R1 = Radiobutton(root, text="Option 1", variable=var, value=1,
-                  command=sel).place(x=20, y=20)
-
-R2 = Radiobutton(root, text="Option 2", variable=var, value=2,
-                  command=sel).place(x=20, y=50)
-R3 = Radiobutton(root, text="Option 3", variable=var, value=3,
-                  command=sel).place(x=20, y=70)
-
-label = Label(root)
-label.place(x= 20, y=90)
-root.mainloop()
+####### end of connection ####
+displaySql = """SELECT * FROM infosys;"""
+cursor = conn.cursor()
+cursor.execute(displaySql)
+i=0
+for student in cursor:
+    for j in range(len(student)):
+        e = Entry(my_w, width=10, fg='blue') 
+        e.grid(row=i, column=j) 
+        e.insert(END, student[j])
+    i=i+1
+my_w.mainloop()

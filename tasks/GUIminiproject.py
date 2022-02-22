@@ -1,5 +1,6 @@
 import sys
 from tkinter import *
+from tkinter.ttk import Combobox
 import mysql.connector
 
 def insertDb():
@@ -9,15 +10,39 @@ def insertDb():
         address = (userAddress.get())
         gender = (userGender.get())
         hobbies = (userHobbies1.get()) + " " + (userHobbies2.get()) + " " + (userHobbies3.get())
-        sql = """INSERT INTO `infosys`(`name`, `address`, `gender`, `hobbies`) VALUES (%s,%s,%s,%s);"""
-        values=(name,address, gender, hobbies)
+        academics= (userAcad.get())
+        for i in listAge.curselection():
+            age = (listAge.get(i))
+        sql = """INSERT INTO `infosys`(`name`, `address`, `gender`, `hobbies`, `academics`, `age`) VALUES (%s,%s,%s,%s,%s,%s);"""
+        values=(name,address, gender, hobbies, academics, age)
         cursor= mydb.cursor()
         cursor.execute(sql, values)
         mydb.commit()
         print("*****inserting into database*****")
-        print ("inserted")
+        print("inserted")
+        mydb.close()
+
     except:
      print("error: ", sys.exc_info()[0])
+    finally:
+        pass
+
+def loadTable():
+    try:
+        conn = mysql.connector.connect(host="localhost", database="broadway", user="root", password="")
+        displaySql = """SELECT * FROM infosys;"""
+        cursor = conn.cursor()
+        cursor.execute(displaySql)
+        i = 0
+        for student in cursor:
+            for j in range(len(student)):
+                infosysTable = Entry(infosys, width=10, fg='blue')
+                infosysTable.grid(row=i, column=j)
+                infosysTable.insert(END, student[j])
+            i = i + 1
+    except:
+        print("error: ", sys.exc_info()[0])
+
     finally:
         pass
 
@@ -29,6 +54,9 @@ userGender= StringVar()
 userHobbies1= StringVar()
 userHobbies2= StringVar()
 userHobbies3= StringVar()
+userAge = StringVar()
+userAcad = StringVar()
+
 infosys.geometry("600x800")
 infosys.resizable(False, False)
 #name
@@ -53,7 +81,7 @@ ckHobbies3 = Checkbutton(infosys, text="Basketball",variable=userHobbies3,  onva
 
 #Age group
 labelAge= Label(infosys, text="Age: ").place(x=20, y= 200)
-listAge= Listbox(infosys)
+listAge= Listbox(infosys, width=40, height=10)
 listAge.insert('0',"1-17")
 listAge.insert('1',"18-21")
 listAge.insert('2',"21-30")
@@ -64,6 +92,16 @@ listAge. place(x=80, y=200)
 #academics
 labelAcad= Label(infosys, text="Academics: ").place(x=20, y=400)
 
+# Combobox creation
+
+acadchosen = Combobox(infosys, width = 27, textvariable = userAcad)
+acadchosen['values'] = ('+2',
+						'Bachelors',
+						'Masters')
+acadchosen.place(x=80, y=400)
+acadchosen.current(1)
+
 #save button
 btnSave= Button(infosys, text="Save", command=insertDb).place(x=250, y=500)
+loadTable()
 infosys.mainloop()
