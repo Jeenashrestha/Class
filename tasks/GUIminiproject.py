@@ -1,6 +1,7 @@
 import sys
 from tkinter import *
-from tkinter.ttk import Combobox
+from tkinter.ttk import Combobox, Treeview
+from tkinter import messagebox
 import mysql.connector
 
 def insertDb():
@@ -40,14 +41,78 @@ def loadTable():
                 infosysTable.grid(row=i, column=j)
                 infosysTable.insert(END, student[j])
             i = i + 1
+        conn.close()
     except:
         print("error: ", sys.exc_info()[0])
 
     finally:
         pass
 
+def deleteAllDb():
+    try:
+        mydb = mysql.connector.connect(host="localhost", database="broadway", user="root", password="")
+        delSql = """ DELETE FROM infosys """
+        res=messagebox.askquestion('', 'Are your Sure?')
+        if(res=='yes'):
+            cursor = mydb.cursor()
+            cursor.execute(delSql)
+            mydb.commit()
+            mydb.close()
+            print("Deleted all records")
 
-infosys= Tk();
+        else:
+            mydb.close()
+
+    except:
+        print("Error: ", sys.exc_info()[0])
+    finally:
+        pass
+
+def searchInfo():
+    try:
+        conn = mysql.connector.connect(host="localhost", database="broadway", user="root", password="")
+        if conn.is_connected:
+            fetchSql = """SELECT * FROM infosys WHERE name= %s;"""
+            name= (userSearch.get())
+            value = (name,)
+            cursor = conn.cursor()
+            cursor.execute(fetchSql, value)
+            results = cursor.fetchall()
+            trv =Treeview(infosys, selectmode='browse')
+            trv.grid(row=1, column=1, padx=20, pady=20)
+            # number of columns
+            trv["columns"] = ("1", "2", "3", "4", "5")
+
+            # Defining heading
+            trv['show'] = 'headings'
+
+            # width of columns and alignment
+            trv.column("1", width=30, anchor='c')
+            trv.column("2", width=80, anchor='c')
+            trv.column("3", width=80, anchor='c')
+            trv.column("4", width=80, anchor='c')
+            trv.column("5", width=80, anchor='c')
+
+            # Headings
+            # respective columns
+            trv.heading("1", text="id")
+            trv.heading("2", text="Name")
+            trv.heading("3", text="Class")
+            trv.heading("4", text="Mark")
+            trv.heading("5", text="Gender")
+
+            for r in results:
+                for dt in results:
+                    trv.insert("", 'end', iid=dt[0], text=dt[0],
+                               values=(dt[0], dt[1], dt[2], dt[3], dt[4]))
+            conn.close()
+    except:
+        print("Error: ")
+    finally:
+        pass
+
+
+infosys= Tk()
 userName= StringVar()
 userAddress= StringVar()
 userGender= StringVar()
@@ -56,6 +121,7 @@ userHobbies2= StringVar()
 userHobbies3= StringVar()
 userAge = StringVar()
 userAcad = StringVar()
+userSearch= StringVar()
 
 infosys.geometry("600x800")
 infosys.resizable(False, False)
@@ -102,6 +168,14 @@ acadchosen.place(x=80, y=400)
 acadchosen.current(1)
 
 #save button
-btnSave= Button(infosys, text="Save", command=insertDb).place(x=250, y=500)
+btnSave= Button(infosys, text="Save", command=insertDb).place(x=150, y=500)
+
+#delete button
+btnDelete =Button(infosys, text="Delete All", command=deleteAllDb).place(x=210,y=500)
+
+#search
+inpSearch= Entry(infosys, width=20, textvariable=userSearch).place(x=300, y=505)
+btnSearch= Button(infosys, text="Search", command=searchInfo).place(x=425, y=500)
+
 loadTable()
 infosys.mainloop()
