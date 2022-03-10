@@ -17,22 +17,26 @@ class Stories:
         browseStoryBtn = Button(self.mainStories, text = "Browse on computer", font=40, command=self.browseStories).place(x=150, y=300)
         writeStoryBtn = Button(self.mainStories, text="Write your own story", font=40, command=self.writeStory).place(x=150,y=350)
 
-    def browseStories(self):
-        Tk().withdraw()
-        filename = askopenfilename()
-        storyfile= open(filename, "r")
-        self.story= storyfile.read()
 
     def loadPlayer(self):
         self.player= Toplevel()
         self.player.configure(height=500, width=400)
         self.playerImg= PhotoImage("images/story1.png")
         self.imageFrame= Frame(self.player, height=400, width=400, bg="black").place(x=0, y=0)
-        self.pauseBtn = Button(self.player, text="Pause").place(x=70, y=450)
+
         self.playBtn= Button(self.player, text="Play", command=self.play).place(x=120, y=450)
         self.stopBtn = Button(self.player, text="Stop").place(x=170, y=450)
-        self.resumeBtn = Button(self.player, text="Resume").place(x=220, y=450)
-        self.replayBtn = Button(self.player, text="Replay").place(x=290, y=450)
+
+
+    def browseStories(self):
+        Tk().withdraw()
+        filename = askopenfilename()
+        storyfile = open(filename, "r")
+        if storyfile is None:
+            return
+        else:
+            self.story = storyfile.read()
+            self.loadPlayer()
 
     def writeStory(self):
         storyWin= Toplevel()
@@ -61,7 +65,7 @@ class Stories:
                 return
             text2save = str(story)
             storyFile.write(text2save)
-            storyFile.close()  
+            storyFile.close()
 
         except:
             print("error: ", sys.exc_info())
