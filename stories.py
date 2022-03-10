@@ -1,8 +1,8 @@
 import sys
 from tkinter import *
-from tkinter.filedialog import askopenfilename
+from tkinter.filedialog import askopenfilename, asksaveasfile
 from PIL import Image, ImageTk
-from text_to_speech import speak
+from text_to_speech import *
 
 class Stories:
     def __init__(self, win):
@@ -15,25 +15,63 @@ class Stories:
         play1Btn= Button(self.mainStories, text="Play").place(x=325, y=115)
         downloadBtn = Button(self.mainStories, text="Download").place(x=325, y=150)
         browseStoryBtn = Button(self.mainStories, text = "Browse on computer", font=40, command=self.browseStories).place(x=150, y=300)
-        writeStoryBtn = Button(self.mainStories, text="Write your own story", font=40).place(x=150,y=350)
+        writeStoryBtn = Button(self.mainStories, text="Write your own story", font=40, command=self.writeStory).place(x=150,y=350)
 
     def browseStories(self):
         Tk().withdraw()
         filename = askopenfilename()
         storyfile= open(filename, "r")
         self.story= storyfile.read()
+
+    def loadPlayer(self):
         self.player= Toplevel()
         self.player.configure(height=500, width=400)
-        playerImg= PhotoImage("images/story1.png")
-        imageFrame= Frame(self.player, height=400, width=400, bg="black").place(x=0, y=0)
-        pauseBtn = Button(self.player, text="Pause").place(x=70, y=450)
-        playBtn= Button(self.player, text="Play", command=self.play).place(x=120, y=450)
-        stopBtn = Button(self.player, text="Stop").place(x=170, y=450)
-        resumeBtn = Button(self.player, text="Resume").place(x=220, y=450)
-        replayBtn = Button(self.player, text="Replay").place(x=290, y=450)
+        self.playerImg= PhotoImage("images/story1.png")
+        self.imageFrame= Frame(self.player, height=400, width=400, bg="black").place(x=0, y=0)
+        self.pauseBtn = Button(self.player, text="Pause").place(x=70, y=450)
+        self.playBtn= Button(self.player, text="Play", command=self.play).place(x=120, y=450)
+        self.stopBtn = Button(self.player, text="Stop").place(x=170, y=450)
+        self.resumeBtn = Button(self.player, text="Resume").place(x=220, y=450)
+        self.replayBtn = Button(self.player, text="Replay").place(x=290, y=450)
+
+    def writeStory(self):
+        storyWin= Toplevel()
+        storyWin.configure(bg="black", width=414, height=500)
+        writeLbl= Label(storyWin, text="Write your story", bg= "Black", fg="pink", font=40).place(x=10, y=10)
+        self.storytextArea= Text(storyWin, width=40, height=10)
+        self.storytextArea.place(x=40,y=50)
+        saveTextBtn = Button(storyWin, text="Save As Text", command=self.saveText). place(x=100, y= 300)
+        play = Button(storyWin, text="Play", command=self.playWritten).place(x=200, y=300)
+        saveAudioBtn = Button(storyWin, text="Save As Audio", command=self.saveAudio). place(x=250, y= 300)
+
+
+    def playWritten(self):
+        self.story=self.storytextArea.get("1.0", "end-1c")
+        self.play()
+
+    def saveAudio(self):
+       self.story= self.storytextArea.get("1.0", "end-1c")
+       speak(self.story, "en", save=True)
+
+    def saveText(self):
+        try:
+            story=self.storytextArea.get("1.0", "end")
+            storyFile = asksaveasfile(mode='w', defaultextension=".txt")
+            if storyFile is None:
+                return
+            text2save = str(story)
+            storyFile.write(text2save)
+            storyFile.close()  
+
+        except:
+            print("error: ", sys.exc_info())
 
     def play(self):
-        speak(self.story,'en', save=False)
+        speak(self.story, "en", save=False)
+
+    def stop(self):
+        pass
+
 
 
 
@@ -51,20 +89,4 @@ root.mainloop()
 
 
 
-# contentAppend= "Appended content"
-# try:
-#     h = open(completeName, "a")
-#     h.write(contentAppend)
-#     h.close
-#
-#     print ("*******After appending*******")
-#
-#     i = open("D:/file/myfile.txt", "r")
-#     print(i.read())
-#     i.close()
-# except:
-#     print("error: ", sys.exc_info())
-# finally:
-#     del filename
-#     del path
-#
+
