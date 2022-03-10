@@ -1,7 +1,11 @@
 #MOBILE TYPE INTERFACE
+import csv
 import sys
 from tkinter import *
 from tkinter import messagebox
+from tkinter.filedialog import askopenfilename
+
+import pandas as pd
 
 from PIL import ImageTk, Image
 from tkinter.ttk import Treeview
@@ -53,20 +57,53 @@ class AddressBook:
 		self.treev.heading("Number", text="Number")
 		self.fetchContact()
 
+		self.importCsvBtn = Button(self.AddressbookFrame, text="Import contacts", command= self.importContacts).place(x=100, y=550)
+		self.exportCsvBtn = Button(self.AddressbookFrame, text="Export contacts", command= self.exportContacts).place(x=200, y=550)
+
+	def importContacts(self):
+
+		Tk().withdraw()
+		filename = askopenfilename()
+		try:
+			csvFile = open(filename, mode="r")
+			reader = csv.reader(csvFile)
+			for data in reader:
+				for items in data:
+					firstname= items[0]
+					print(firstname)
+		except:
+			print("Error: ", sys.exc_info())
+
+	def exportContacts(self):
+		headingRow = ['Firstname', 'Lastname', 'Number']
+		sql= """SELECT * FROM contact """
+		cursor= self.conn.cursor()
+		cursor.execute(sql)
+		results= cursor.fetchall()
+		try:
+
+			csvFile = open('D:/file/contact.csv', "w")
+			writer = csv.writer(csvFile)
+			writer.writerows(results)
+			csvFile.close()
+		except:
+			print("Error: ", sys.exc_info())
+
 	def search(self):
+
 		searchValue = (self.searchVal.get())
-		#print(searchValue)
-		self.treev.delete(*self.treev.get_children())
-		sql = """
-		SELECT * FROM `contact` WHERE `firstname`=%s OR `lastname`= %s OR `number`= %s
-		"""
-		values= (searchValue, searchValue, searchValue)
-		cursor = self.conn.cursor()
-		#cursor.execute(sql)
-		cursor.execute(sql, values)
-		results = cursor.fetchall()
-		for dt in results:
-			self.treev.insert("", 'end', text=dt[0],values=(dt[1], dt[2], dt[3]))
+		if searchValue!="":
+			self.treev.delete(*self.treev.get_children())
+			sql = """
+			SELECT * FROM `contact` WHERE `firstname`=%s OR `lastname`= %s OR `number`= %s
+			"""
+			values= (searchValue, searchValue, searchValue)
+			cursor = self.conn.cursor()
+			#cursor.execute(sql)
+			cursor.execute(sql, values)
+			results = cursor.fetchall()
+			for dt in results:
+				self.treev.insert("", 'end', text=dt[0],values=(dt[1], dt[2], dt[3]))
 		else:
 			pass
 
@@ -98,15 +135,21 @@ class AddressBook:
 		lastname= (self.lastname.get())
 		num= (self.number.get())
 
-		sql = """INSERT INTO `contact`(`firstname`, `lastname`, `number`) VALUES (%s,%s,%s);"""
-		values = (firstname, lastname, num)
-		print(values)
-		cursor = self.conn.cursor()
-		cursor.execute(sql, values)
-		self.conn.commit()
-		print("inserted")
-		self.fetchContact()
-		self.conn.close()
+		if firstname!="" and lastname!="" and num!="":
+			if num.strip().isdigit():
+				sql = """INSERT INTO `contact`(`firstname`, `lastname`, `number`) VALUES (%s,%s,%s);"""
+				values = (firstname, lastname, num)
+				print(values)
+				cursor = self.conn.cursor()
+				cursor.execute(sql, values)
+				self.conn.commit()
+				self.fetchContact()
+				self.conn.close()
+				self.addNew.destroy()
+			else:
+				messagebox.showerror("Error", "Enter correct number")
+		else:
+			messagebox.showerror("Error", "Please fill in all the details")
 
 
 	def fetchContact(self):
@@ -120,70 +163,82 @@ class AddressBook:
 
 
 	def loadEditContactForm(self):
+		try:
+			old_firstname = self.treev.item(self.treev.selection())['values'][0]
+			old_lastname = self.treev.item(self.treev.selection())['values'][1]
+			old_number = self.treev.item(self.treev.selection())['values'][2]
+			#print(old_firstname,old_lastname, old_number)
+			self.editWin = Toplevel()
+			self.editWin.configure(height=400, width=400)
+			self.editWin.title = "edit contact"
 
-		old_firstname = self.treev.item(self.treev.selection())['values'][0]
-		old_lastname = self.treev.item(self.treev.selection())['values'][1]
-		old_number = self.treev.item(self.treev.selection())['values'][2]
-		#print(old_firstname,old_lastname, old_number)
-		self.editWin = Toplevel()
-		self.editWin.configure(height=400, width=400)
-		self.editWin.title = "edit contact"
+			self.newfirstname = StringVar()
+			self.newlastname = StringVar()
+			self.newnumber = StringVar()
+			self.c_id = self.treev.item(self.treev.selection())['text']
+			fnameLbl = Label(self.editWin, text="Firstname").place(x=40, y=50)
+			fnameInp = Entry(self.editWin, textvariable=self.newfirstname,  width=40)
+			fnameInp.insert(0, old_firstname)
+			fnameInp.place(x=100, y=50)
 
-		self.newfirstname = StringVar()
-		self.newlastname = StringVar()
-		self.newnumber = StringVar()
-		self.c_id = self.treev.item(self.treev.selection())['text']
-		fnameLbl = Label(self.editWin, text="Firstname").place(x=40, y=50)
-		fnameInp = Entry(self.editWin, textvariable=self.newfirstname,  width=40)
-		fnameInp.insert(0, old_firstname)
-		fnameInp.place(x=100, y=50)
+			lnameLbl = Label(self.editWin, text="Lastname").place(x=40, y=100)
+			lnameInp = Entry(self.editWin, textvariable=self.newlastname,  width=40)
+			lnameInp.insert(0, old_lastname)
+			lnameInp.place(x=100, y=100)
 
-		lnameLbl = Label(self.editWin, text="Lastname").place(x=40, y=100)
-		lnameInp = Entry(self.editWin, textvariable=self.newlastname,  width=40)
-		lnameInp.insert(0, old_lastname)
-		lnameInp.place(x=100, y=100)
+			numberLbl = Label(self.editWin, text="Number").place(x=40, y=150)
+			numInp = Entry(self.editWin, textvariable=self.newnumber,width=40)
+			numInp.insert(0, old_number)
+			numInp.place(x=100, y=150)
 
-		numberLbl = Label(self.editWin, text="Number").place(x=40, y=150)
-		numInp = Entry(self.editWin, textvariable=self.newnumber,width=40)
-		numInp.insert(0, old_number)
-		numInp.place(x=100, y=150)
+			updateButton = Button(self.editWin, text="Update", command=self.editContact).place(x=200, y=200)
 
-		updateButton = Button(self.editWin, text="Update", command=self.editContact).place(x=200, y=200)
-
+		except:
+			messagebox.showerror("Error", "Please select an item to edit.")
 
 	def editContact(self):
 		id= self.c_id
 		newfirstname= (self.newfirstname.get())
 		newlastname= (self.newlastname.get())
 		newnumber= (self.newnumber.get())
-
-		cursor= self.conn.cursor()
-		sql= """
-		UPDATE `contact` SET `firstname`=%s,`lastname`= %s,`number`= %s WHERE `id`= %s 
-		"""
-		values = (newfirstname, newlastname, newnumber, id)
-		cursor.execute(sql, values)
-		self.conn.commit()
-		self.fetchContact()
-		self.conn.close()
-		print("Updated")
+		if newfirstname!="" and newlastname!="" and newnumber!="":
+			if newnumber.strip().isdigit():
+				cursor= self.conn.cursor()
+				sql= """
+				UPDATE `contact` SET `firstname`=%s,`lastname`= %s,`number`= %s WHERE `id`= %s 
+				"""
+				values = (newfirstname, newlastname, newnumber, id)
+				cursor.execute(sql, values)
+				self.conn.commit()
+				self.fetchContact()
+				self.conn.close()
+				print("Updated")
+				self.editWin.destroy()
+			else:
+				messagebox.showerror("Error", "Cannot enter text in number")
+		else:
+			messagebox.showerror("Error", "Please fill in all the details")
 
 
 	def deleteContact(self):
-		c_id = self.treev.item(self.treev.selection())['text']
-		res = messagebox.askquestion('', 'Are your Sure?')
-		if (res == 'yes'):
-			sql= "DELETE FROM contact WHERE id= %s"
-			value= (c_id,)
-			cursor= self.conn.cursor()
-			cursor.execute(sql,value)
-			self.conn.commit()
-			#self.conn.close()
-			print("Deleted")
-			self.fetchContact()
-			self.conn.close()
-		else:
-			pass
+		try:
+			c_id = self.treev.item(self.treev.selection())['text']
+			old_firstname = self.treev.item(self.treev.selection())['values'][0]
+
+			res = messagebox.askquestion('', 'Are your Sure?')
+			if (res == 'yes'):
+				sql= "DELETE FROM contact WHERE id= %s"
+				value= (c_id,)
+				cursor= self.conn.cursor()
+				cursor.execute(sql,value)
+				self.conn.commit()
+				print("Deleted")
+				self.fetchContact()
+				self.conn.close()
+			else:
+				pass
+		except:
+			messagebox.showerror("Error", "No contact selected")
 
 
 
