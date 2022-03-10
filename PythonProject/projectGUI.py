@@ -61,16 +61,25 @@ class AddressBook:
 		self.exportCsvBtn = Button(self.AddressbookFrame, text="Export contacts", command= self.exportContacts).place(x=200, y=550)
 
 	def importContacts(self):
-
 		Tk().withdraw()
 		filename = askopenfilename()
 		try:
 			csvFile = open(filename, mode="r")
 			reader = csv.reader(csvFile)
 			for data in reader:
-				for items in data:
-					firstname= items[0]
-					print(firstname)
+				if len(data)>0:
+					firstname= data[1]
+					lastname= data[2]
+					number= data[3]
+					sql = """INSERT INTO `contact`(`firstname`, `lastname`, `number`) VALUES (%s,%s,%s);"""
+					values = (firstname, lastname, number)
+					#print(values)
+					cursor = self.conn.cursor()
+					cursor.execute(sql, values)
+					self.conn.commit()
+					self.fetchContact()
+					self.conn.close()
+
 		except:
 			print("Error: ", sys.exc_info())
 
@@ -81,7 +90,6 @@ class AddressBook:
 		cursor.execute(sql)
 		results= cursor.fetchall()
 		try:
-
 			csvFile = open('D:/file/contact.csv', "w")
 			writer = csv.writer(csvFile)
 			writer.writerows(results)
@@ -90,7 +98,6 @@ class AddressBook:
 			print("Error: ", sys.exc_info())
 
 	def search(self):
-
 		searchValue = (self.searchVal.get())
 		if searchValue!="":
 			self.treev.delete(*self.treev.get_children())
